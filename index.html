@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>Smart Claviculário COSQ - Enterprise</title>
+    <title>Claviculário COSQ - Enterprise</title>
     <meta name="theme-color" content="#0056b3">
     <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="https://unpkg.com/html5-qrcode"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -75,6 +74,18 @@
         @media print{.sidebar,.fab-container,.bottom-nav,.mobile-header,.search-bar button{display:none!important;}.table-container{box-shadow:none;border:1px solid #ccc;}}
         .mobile-header{display:none} .bottom-nav{display:none !important}
         @media (max-width:900px){ .mobile-header{display:flex;position:fixed;top:0;left:0;width:100%;background:var(--modal-bg);backdrop-filter:var(--blur);padding:10px 15px;align-items:center;justify-content:space-between;z-index:1100;box-sizing:border-box;border-bottom:1px solid rgba(128,128,128,0.2)} .sidebar{display:none !important} .sidebar-overlay.active{display:block;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000} .main-content{padding:70px 15px 100px 15px !important} .tab-content{padding:0} .bottom-nav{display:flex !important;position:fixed;bottom:0;left:0;width:100%;background:var(--modal-bg);backdrop-filter:var(--blur);border-top:1px solid rgba(128,128,128,0.2);z-index:1100;justify-content:space-around;padding:12px 0;padding-bottom:env(safe-area-inset-bottom, 12px);box-shadow:0 -4px 15px rgba(0,0,0,0.1)} .bnav-item{display:flex;flex-direction:column;align-items:center;color:#888;font-size:10px;font-weight:bold;gap:4px;cursor:pointer;flex:1;transition:0.2s} .bnav-item span{font-size:24px;transition:0.2s} .bnav-item.active{color:var(--primary)} .bnav-item.active span{transform:translateY(-4px) scale(1.15);filter:drop-shadow(0 4px 6px rgba(0,86,179,0.3))} body[data-role="vistoriador"] #bottomNavGeral{display:none !important} body[data-role="operador"] #bottomNavVistoria, body[data-role="admin"] #bottomNavVistoria{display:none !important} body[data-role="vistoriador"] #fabOperacao{display:none !important} .dash-cards{grid-template-columns:repeat(2, 1fr);display:grid;height:auto} .dash-charts{flex-direction:column;height:auto !important} .chart-container{flex:none;min-height:300px;margin-bottom:10px;} .search-bar{flex-direction:column;width:100%;gap:10px} .search-bar input, .search-bar select, .search-bar button{width:100%;padding:15px;font-size:15px} .modal{padding:20px;width:100%;border-radius:16px} .modal-actions{justify-content:stretch} .modal-actions > *{flex:1;text-align:center} .mapa-grid{grid-template-columns:repeat(3, 1fr)} .grid-menu{grid-template-columns:1fr} .fab-container{bottom:85px;right:15px} td{position:relative} tbody tr{position:relative;z-index:1} }
+        /* Efeito de Card Selecionado (Filtros do Balcão) */
+.card.card-active {
+    outline: 2px solid var(--primary);
+    outline-offset: -1px;
+    background-color: rgba(0, 86, 179, 0.04);
+    box-shadow: 0 8px 15px rgba(0, 86, 179, 0.15);
+    transform: translateY(-2px);
+}
+body.dark-mode .card.card-active {
+    background-color: rgba(41, 128, 185, 0.1);
+    box-shadow: 0 8px 15px rgba(41, 128, 185, 0.2);
+}
     </style>
 </head>
 <body>
@@ -98,7 +109,7 @@
     </div>
     
     <div id="appContainer">
-        <div class="mobile-header"><button class="btn-notif" style="visibility:hidden">🔔</button><h2 style="margin:0;font-size:18px;color:var(--primary);">Smart COSQ</h2><button class="btn-notif" onclick="openModal('modalNotificacoes')">🔔<span class="notif-badge">0</span></button></div>
+        <div class="mobile-header"><button class="btn-notif" style="visibility:hidden">🔔</button><h2 style="margin:0;font-size:18px;color:var(--primary);">Claviculário COSQ</h2><button class="btn-notif" onclick="openModal('modalNotificacoes')">🔔<span class="notif-badge">0</span></button></div>
         
         <div class="sidebar" id="sidebar">
             <div style="text-align:center;margin-bottom:15px;"><img src="logo_escura.png" class="logo-light" alt="COSQ" style="max-width:200px" onerror="this.style.display='none'"><img src="logo_branca.png" class="logo-dark" alt="COSQ" style="max-width:200px" onerror="this.style.display='none'"></div>
@@ -153,9 +164,10 @@
                     <h2 style="margin:0;font-size:22px;">📜 Histórico de Logs</h2><span class="badge info" style="font-size:12px;padding:6px 12px;border-radius:20px;">Total: <span id="histCounter">0</span></span>
                 </div>
                 <div class="search-bar" style="background:var(--surface);padding:15px;border-radius:12px;border:1px solid var(--border);">
-                    <input type="date" id="histDataInicio" onchange="carregarHistorico()" style="flex:1;">
-                    <input type="date" id="histDataFim" onchange="carregarHistorico()" style="flex:1;">
-                    <button class="btn-secondary" onclick="limparFiltrosHistorico()">🧹 Limpar Filtros</button>
+                    <input type="text" id="histBusca" class="uppercase-input" placeholder="🔍 Placa, Nome ou Evento..." oninput="clearTimeout(window._histDebounce);window._histDebounce=setTimeout(()=>carregarHistorico(1),500)" style="flex:2;min-width:160px;">
+                    <input type="date" id="histDataInicio" onchange="carregarHistorico(1)" style="flex:1;">
+                    <input type="date" id="histDataFim" onchange="carregarHistorico(1)" style="flex:1;">
+                    <button class="btn-secondary" onclick="limparFiltrosHistorico()">🧹 Limpar</button>
                     <button class="btn-save green" onclick="exportarCSV()">📊 Excel</button>
                 </div>
                 <div class="table-container">
@@ -178,6 +190,7 @@
                             <tbody id="tbHistorico"></tbody>
                         </table>
                     </div>
+                    <div id="histPaginacao" style="border-top:1px solid var(--border);background:var(--surface);padding:5px;flex-shrink:0;"></div>
                 </div>
             </div>
 
@@ -210,11 +223,44 @@
                 </div>
             </div>
 
-            <div id="tabConfig" class="tab-content">
+<div id="tabConfig" class="tab-content">
+<!-- ZERAR SISTEMA  -->  
+<button class="btn-save danger" onclick="resetarSistemaCompleto()">🚨 ZERAR TODO O SISTEMA</button>
+
+<script>
+async function resetarSistemaCompleto() {
+    if (confirm("ATENÇÃO: Isso apagará todas as chaves e todo o histórico permanentemente. Confirmar?")) {
+        showLoading("LIMPANDO BANCO DE DADOS...");
+        try {
+            await _supabase.from('chaves').delete().filter('placa', 'neq', '0');
+            await _supabase.from('historico').delete().filter('placa_retirada', 'neq', '0');
+            showToast("Sistema zerado com sucesso!", "success");
+            location.reload(); // Recarrega para atualizar a tela
+        } catch (e) {
+            showToast("Erro ao zerar: " + e.message, "error");
+        } finally {
+            hideLoading();
+        }
+    }
+}
+</script> <!-- FIM ZERAR SISTEMA  -->  
                 <h2 style="margin-top:0;margin-bottom:20px;font-size:22px;">Configurações</h2>
                 <div class="grid-menu">
                     <div class="grid-card" onclick="abrirClientes()"><span class="icon">👥</span><h3>Clientes</h3><p>Gerir WhatsApp e Empresas.</p></div>
                     <div class="grid-card" onclick="abrirAcessos()"><span class="icon">🛡️</span><h3>Acessos</h3><p>Criar utilizadores.</p></div>
+                    
+                    <div class="grid-card" onclick="document.getElementById('importChavesInp').click()">
+                        <span class="icon">📥</span>
+                        <h3>Importar Chaves</h3>
+                        <p>Carregar JSON de endereçamento e placas.</p>
+                        <input type="file" id="importChavesInp" style="display:none" accept=".json" onchange="importarJSON(event, 'chaves')">
+                    </div>
+                    <div class="grid-card" onclick="document.getElementById('importHistInp').click()">
+                        <span class="icon">⏳</span>
+                        <h3>Importar Histórico</h3>
+                        <p>Carregar JSON de logs passados.</p>
+                        <input type="file" id="importHistInp" style="display:none" accept=".json" onchange="importarJSON(event, 'historico')">
+                    </div>
                 </div>
             </div>
 
@@ -273,7 +319,7 @@
         <div class="modal">
             <h2>Nova Retirada</h2>
             <div class="form-group" style="display:flex;gap:5px;">
-                <input type="text" id="retPlacas" class="uppercase-input" style="flex:1;" placeholder="🔍 Selecione ou Digite a Placa" list="dlPlacas" autocomplete="off" onchange="if(this.value.length >= 7) forcarAddPlacaSelect();" onkeypress="if(event.key==='Enter') {event.preventDefault();forcarAddPlacaSelect();}">
+                <input type="text" id="retPlacas" class="uppercase-input" style="flex:1;" placeholder="🔍 Digite a Placa" list="dlPlacas" autocomplete="off" oninput="filtrarPlacasDatalist(this.value)" onchange="if(this.value.length >= 7) forcarAddPlacaSelect();" onkeypress="if(event.key==='Enter') {event.preventDefault();forcarAddPlacaSelect();}">
                 <datalist id="dlPlacas"></datalist>
                 <button type="button" class="btn-secondary" onclick="abrirScanner('retPlacas')">📷</button>
             </div>
@@ -282,10 +328,16 @@
             <hr class="divider">
             <div class="form-group">
                 <select id="retMotivo">
-                    <option value="Movimentação Interna">Movimentação Interna</option>
-                    <option value="Vistorias">Vistorias</option>
+                    <option value="Abastecimento">Abastecimento</option>
                     <option value="Desmobilização">Desmobilização</option>
+                    <option value="Implementação">Implementação</option>
+                    <option value="Manutenção">Manutenção</option>
+                    <option value="Movimentação Interna">Movimentação Interna</option>
+                    <option value="Posse Temporária">Posse Temporária</option>
+                    <option value="Retorno de Sinistro">Retorno de Sinistro</option>
                     <option value="Saída Definitiva">Saída Definitiva</option>
+                    <option value="Sinistro">Sinistro</option>
+                    <option value="Vistorias">Vistorias</option>
                 </select>
             </div>
             <div class="form-group" style="display:flex;gap:10px;">
@@ -355,8 +407,17 @@
         const PLACA_REGEX = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
         
         let currentPageBalcao = 1; let dadosBalcaoFiltrados = []; const ITEMS_PER_PAGE = 50; 
-        let currentPageHist = 1; let dadosHistoricoFiltrados = []; let dadosHistoricoBrutos = []; 
+        let currentPageHist = 1; let dadosHistoricoFiltrados = []; let dadosHistoricoBrutos = []; let arrayHistoricoGlobal = null;
         let filtrosAtivos = {}; let colunaAtualExcel = ''; let placaAtualDetalhe = '';
+        
+        // Paginação server-side do Histórico
+        const HIST_PAGE_SIZE = 50;
+        let histPageAtual = 1;
+        let histTotalRegistros = 0;
+        let histCarregando = false;
+        let histFiltrosServidor = { dataInicio: '', dataFim: '', busca: '' };
+        let histSortCol = 'id';
+        let histSortAsc = false;
 
         // ------------------------------------------------
         // 3. FUNÇÕES UTILITÁRIAS
@@ -408,9 +469,42 @@
         }
         
         function iniciarRealtime() { 
-            _supabase.removeAllChannels(); canalSync = _supabase.channel('cloud-sync-channel',{config:{broadcast:{self:false}}}); 
-            canalSync.on('postgres_changes',{event:'*',schema:'public',table:'chaves'}, p => { clearTimeout(realtimeTimer); realtimeTimer = setTimeout(()=>renderTable(),1500); }).on('broadcast',{event:'trava_cadastro'}, p => { const d=p.payload; const bN=document.querySelector('button[onclick="abrirNovaEntrada()"]'); if(d.status==='bloqueado') { if(bN) bN.disabled=true; if(document.getElementById('modalEntrada').style.display==='flex') { closeModal('modalEntrada'); showToast(`Em uso por ${d.usuario}`,'warning'); } clearTimeout(timeoutTrava); timeoutTrava = setTimeout(()=>{if(bN)bN.disabled=false;},120000); } else { clearTimeout(timeoutTrava); if(bN)bN.disabled=false; } }).subscribe((s) => { if(s==='SUBSCRIBED') { const sE=document.getElementById('cloudStatus'); if(sE){sE.innerText="☁️ Realtime Ativo";sE.style.color="var(--success)";} } }); 
-        }
+        _supabase.removeAllChannels(); 
+        canalSync = _supabase.channel('cloud-sync-channel',{config:{broadcast:{self:false}}}); 
+        
+        canalSync
+        // Escuta mudanças nas Chaves do Balcão
+        .on('postgres_changes',{event:'*',schema:'public',table:'chaves'}, p => { 
+            clearTimeout(realtimeTimer); 
+            realtimeTimer = setTimeout(()=>renderTable(),1500); 
+        })
+        // Escuta mudanças no Histórico (NOVO!)
+        .on('postgres_changes',{event:'*',schema:'public',table:'historico'}, p => { 
+            // Se alguém gravar ou importar algo novo no histórico, resetamos a memória em background
+            arrayHistoricoGlobal = null; 
+        })
+        .on('broadcast',{event:'trava_cadastro'}, p => { 
+            const d=p.payload; 
+            const bN=document.querySelector('button[onclick="abrirNovaEntrada()"]'); 
+            if(d.status==='bloqueado') { 
+                if(bN) bN.disabled=true; 
+                if(document.getElementById('modalEntrada').style.display==='flex') { 
+                    closeModal('modalEntrada'); showToast(`Em uso por ${d.usuario}`,'warning'); 
+                } 
+                clearTimeout(timeoutTrava); 
+                timeoutTrava = setTimeout(()=>{if(bN)bN.disabled=false;},120000); 
+            } else { 
+                clearTimeout(timeoutTrava); 
+                if(bN)bN.disabled=false; 
+            } 
+        })
+        .subscribe((s) => { 
+            if(s==='SUBSCRIBED') { 
+                const sE=document.getElementById('cloudStatus'); 
+                if(sE){sE.innerText="☁️ Realtime Ativo";sE.style.color="var(--success)";} 
+            } 
+        }); 
+    }
 
         function iniciarRelogio() { setInterval(()=>{const c=document.getElementById('liveClock'); if(c) c.innerText=new Date().toLocaleString('pt-PT');},1000); } 
         function iniciarVerificadorAtrasos() { setInterval(()=>{ if(!currentUser || !arrayChavesGlobal) return; let cA = 0; arrayChavesGlobal.forEach(d => { let sVal = String(d.status || ''); if(!['Disponível','Saída Definitiva','🚨 Extraviada','Aguardando Guarda'].includes(sVal)) { if(Math.floor((Date.now()-parseDateBR(d.data_status).getTime())/(1000*60*60))>=24) cA++; } }); const cAt = document.getElementById('cntAtrasados'); if(cAt && parseInt(cAt.innerText) !== cA) { const diff = cA - parseInt(cAt.innerText); cAt.innerText = cA; if(diff>0 && currentNivel!=='vistoriador') showToast(`🚨 ${diff} atrasos!`,'warning'); if(filtroStatus === 'Atrasados') { document.getElementById('tableBody').innerHTML=""; currentPageBalcao=1; renderTableCache(); } } }, 60000); }
@@ -570,7 +664,7 @@
             if(!g||!arrayChavesGlobal) return; g.innerHTML=""; const col=['A','B','C','D','E','F']; 
             for(let n=1;n<=21;n++) { 
                 col.forEach(l=>{ 
-                    const loc=`R${p}_${l}${n}_COSQ`; const c=arrayChavesGlobal.find(x=>x.local_guardado===loc); const sl=document.createElement('div'); 
+                    const loc=`R${p}_${l}${n}_LMSPP2`; const c=arrayChavesGlobal.find(x=>x.local_guardado===loc); const sl=document.createElement('div'); 
                     let sC='livre'; let pT='-'; let iE=`Endereço: ${loc}\nStatus: Vazio`; 
                     if(c) { 
                         pT=String(c.placa||''); let sVal=String(c.status||''); 
@@ -711,8 +805,33 @@
             }); 
         }
 
-        function setFiltro(s) { filtroStatus = (filtroStatus===s) ? "" : s; document.getElementById('tableBody').innerHTML=""; currentPageBalcao=1; renderTableCache(); } 
-        function limparFiltros() { filtroStatus = ""; document.getElementById('mainSearch').value=""; document.getElementById('tableBody').innerHTML=""; currentPageBalcao=1; renderTableCache(); }
+        function atualizarEstiloCartoes() {
+    // 1. Remove a seleção de todos os cartões
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('card-active'));
+    
+    // 2. Aplica a seleção apenas no cartão do filtro atual
+    if (filtroStatus === 'Disponível') document.getElementById('cntDisp')?.closest('.card').classList.add('card-active');
+    else if (filtroStatus === 'Serviço') document.getElementById('cntServ')?.closest('.card').classList.add('card-active');
+    else if (filtroStatus === 'Externo') document.getElementById('cntExt')?.closest('.card').classList.add('card-active');
+    else if (filtroStatus === 'Atrasados') document.getElementById('cntAtrasados')?.closest('.card').classList.add('card-active');
+}
+
+        function setFiltro(s) { 
+            filtroStatus = (filtroStatus === s) ? "" : s; 
+            atualizarEstiloCartoes(); // Atualiza o visual
+            document.getElementById('tableBody').innerHTML = ""; 
+            currentPageBalcao = 1; 
+            renderTableCache(); 
+        } 
+
+        function limparFiltros() { 
+            filtroStatus = ""; 
+            atualizarEstiloCartoes(); // Remove os visuais
+            document.getElementById('mainSearch').value = ""; 
+            document.getElementById('tableBody').innerHTML = ""; 
+            currentPageBalcao = 1; 
+            renderTableCache(); 
+        }
 
         function attachSwipeHandler(tr, pl) { 
             if(window.innerWidth > 900) return; let sx=0, sy=0, cx=0, sw=false; 
@@ -748,58 +867,100 @@
         function abrirNovaEntrada() { document.getElementById('entPlaca').value=""; document.getElementById('entVeiculo').value=""; resetFotoBtn('btnEntFoto','lblEntFoto','entFotoB64'); openModal('modalEntrada'); } 
         
         async function saveEntrada() { 
-            const pl=document.getElementById('entPlaca').value.toUpperCase().trim(); const vc=document.getElementById('entVeiculo').value.toUpperCase().trim(); const rs=document.querySelector('input[name="entReserva"]:checked').value; const fm=document.getElementById('entFotoB64').value; 
-            if(!PLACA_REGEX.test(pl)) return showToast("Placa inválida! Use o formato ABC1D23 ou ABC1234.","error"); if(!fm) return showToast("A foto de evidência é obrigatória!","error"); showLoading("REGISTRANDO..."); 
+            const pl=document.getElementById('entPlaca').value.toUpperCase().trim(); 
+            const vc=document.getElementById('entVeiculo').value.toUpperCase().trim(); 
+            const rs=document.querySelector('input[name="entReserva"]:checked').value; 
+            const fm=document.getElementById('entFotoB64').value; 
+            
+            if(!PLACA_REGEX.test(pl)) return showToast("Placa inválida! Use o formato ABC1D23 ou ABC1234.","error"); 
+            if(!fm) return showToast("A foto de evidência é obrigatória!","error"); 
+            showLoading("REGISTRANDO..."); 
+            
             try { 
                 const {data:ext, error: errExt} = await _supabase.from('chaves').select('placa').eq('placa',pl).maybeSingle(); 
                 if(errExt) throw errExt;
                 if(ext) { hideLoading(); return showToast("Esta placa já existe no sistema!","error"); } 
                 
-                const uf = await uploadFotoToStorage(fm, pl); if(!uf) { hideLoading(); return; } 
+                const uf = await uploadFotoToStorage(fm, pl); 
+                if(!uf) { hideLoading(); return; } 
                 
-                const ha=new Date().toLocaleString('pt-PT'); let ins=false, tt=0, lc=""; 
+                const ha=new Date().toLocaleString('pt-PT'); 
+                let ins=false, tt=0, lc=""; 
                 
                 while(!ins && tt<5) { 
-                    const {data:od, error: errOd} = await _supabase.from('chaves').select('local_guardado'); 
-                    if (errOd) throw errOd;
+                    // Usa 'placa' como ordenador para evitar erros de busca silenciosos
+                    const od = await fetchAllData('chaves', 'placa');
                     
-                    const oc = new Set((od || []).map(c=>c.local_guardado)); lc=getLocaisLivres(oc); 
+                    const oc = new Set((od || []).map(c=>c.local_guardado)); 
+                    lc=getLocaisLivres(oc); 
                     if(!lc) { hideLoading(); return showToast("O Pátio está lotado!","error"); } 
 
                     const {error:er} = await _supabase.from('chaves').insert({placa:pl, veiculo:vc, local_guardado:lc, reserva:rs, status:'Disponível', responsavel:'-', data_status:ha, foto_entrada:uf}); 
                     if(er) { if(er.code==='23505') tt++; else throw er; } else ins=true; 
                 } 
                 
+                // A TRAVA ANTI-FANTASMA: Se falhar em guardar a chave, aborta tudo!
+                if (!ins) {
+                    hideLoading();
+                    return showToast("Erro: Gaveta indisponível. Ação abortada.", "error");
+                }
+                
                 const {error: errHist} = await _supabase.from('historico').insert({data_hora:ha, placa_retirada:pl, localizacao:lc, evento:'Cadastro', nome_completo:'SISTEMA', data_devolucao:'-', empresa:currentUser, status_devolucao:'Entregue', reserva:rs, foto_evidencia:uf, foto_devolucao:null}); 
                 if(errHist) throw errHist;
 
-                closeModal('modalEntrada'); showToast(`Gaveta ${lc}!`,"success"); await renderTable(); abrirEtiqueta(pl, vc, lc, rs); 
+                closeModal('modalEntrada'); 
+                showToast(`Gaveta ${lc}!`,"success"); 
+                await renderTable(); 
+                abrirEtiqueta(pl, vc, lc, rs); 
+                
             } catch(e) { 
                 console.error("Erro Entrada:", e);
-                showToast("Erro: " + (e.message || "Violação de permissão. Verifique o RLS."), "error"); 
-            } finally { hideLoading(); } 
+                showToast("Erro: " + (e.message || "Verifique o banco."), "error"); 
+            } finally { 
+                hideLoading(); 
+            } 
         }
 
         // --- LÓGICA DA NOVA RETIRADA COM DATALIST ---
         function openModalRetirada() { 
-            lotPlacas=[]; 
-            atualizarListaRetirada(); 
-            document.getElementById('retPlacas').value="";
-            document.getElementById('retCliente').value=""; 
-            resetFotoBtn('btnRetFoto','lblRetFoto','retFotoB64'); 
-            document.getElementById('btnRetFoto').style.display='none'; 
-            
-            const dlPlacas = document.getElementById('dlPlacas');
-            if (dlPlacas && arrayChavesGlobal) {
-                dlPlacas.innerHTML = '';
-                const disponiveis = arrayChavesGlobal.filter(c => c.status === 'Disponível');
-                disponiveis.forEach(c => {
-                    dlPlacas.innerHTML += `<option value="${c.placa}">${c.placa} - Gav: ${c.local_guardado}</option>`;
-                });
-            }
-            
-            openModal('modalRetirada'); 
-        } 
+    lotPlacas=[]; 
+    atualizarListaRetirada(); 
+    document.getElementById('retPlacas').value="";
+    document.getElementById('retCliente').value=""; 
+    resetFotoBtn('btnRetFoto','lblRetFoto','retFotoB64'); 
+    document.getElementById('btnRetFoto').style.display='none'; 
+    
+    // Deixamos a lista de opções VAZIA ao abrir a tela
+    const dlPlacas = document.getElementById('dlPlacas');
+    if (dlPlacas) dlPlacas.innerHTML = '';
+    
+    openModal('modalRetirada'); 
+}
+
+function filtrarPlacasDatalist(inputVal) {
+    
+    const dlPlacas = document.getElementById('dlPlacas');
+    if (!dlPlacas || !arrayChavesGlobal) return;
+
+    const val = inputVal.toUpperCase().trim();
+
+    // Só começa a procurar se digitar pelo menos 2 caracteres
+    if (val.length < 2) {
+        dlPlacas.innerHTML = ''; 
+        return;
+    }
+
+    // Filtra as placas disponíveis que incluam o texto digitado
+    // .slice(0, 15) garante que o HTML não vai travar renderizando listas gigantes
+    const resultados = arrayChavesGlobal
+        .filter(c => c.status === 'Disponível' && c.placa.includes(val))
+        .slice(0, 15);
+
+    // Injeta no HTML de uma vez só (muito mais rápido que += no loop)
+    dlPlacas.innerHTML = resultados.map(c => 
+        `<option value="${c.placa}">${c.placa} - Gav: ${c.local_guardado}</option>`
+    ).join('');
+}
         
         function forcarAddPlacaSelect() { 
             const inpPlacas = document.getElementById('retPlacas');
@@ -839,48 +1000,57 @@
         } 
         
         async function saveRetirada() { 
-            const m=document.getElementById('retMotivo').value; 
-            const c=document.getElementById('retCliente').value.toUpperCase().trim(); 
-            const f=document.getElementById('retFotoB64').value; 
-            const r=document.querySelector('input[name="retReserva"]:checked').value; 
-            
-            if(lotPlacas.length===0) forcarAddPlacaSelect(); 
-            if(!lotPlacas.length||!c||!f) return showToast("Placa, Destino e Foto obrigatórios!","error"); 
-            showLoading("REGISTRANDO..."); 
-            
-            try { 
-                const {data:cD}=await _supabase.from('pessoas_empresas').select('nome, whatsapp').eq('nome',c).maybeSingle(); 
-                if(!cD) return showToast("Cliente/Destino não encontrado!","error"); 
-                
-                const jP=lotPlacas.map(l=>l.placa); 
-                const {data:cO}=await _supabase.from('chaves').select('placa, reserva, local_guardado').in('placa',jP); 
-                
-                const uf=await uploadFotoToStorage(f, jP[0]); 
-                if(!uf) return; 
-                
-                const hA=new Date().toLocaleString('pt-PT'); 
-                
-                if(m==='Saída Definitiva') {
-                    const {error} = await _supabase.from('chaves').delete().in('placa',jP); 
-                    if (error) throw error;
-                } else {
-                    const {error} = await _supabase.from('chaves').update({status:m, responsavel:c, data_status:hA, reserva:r}).in('placa',jP); 
-                    if (error) throw error;
-                }
-
-                const lg=jP.map(p=>{ return {data_hora:hA, placa_retirada:p, localizacao:cO.find(x=>x.placa===p)?.local_guardado||'-', evento:m, nome_completo:c, data_devolucao:'-', empresa:currentUser, status_devolucao:'Pendente/Saiu', reserva:r, foto_evidencia:uf, foto_devolucao:null}; }); 
-                await insertInParallel('historico',lg); 
-                
-                closeModal('modalRetirada'); 
-                showToast("Concluído!","success"); 
-                await renderTable(); 
-                
-                if(cD.whatsapp) window.open(`https://wa.me/${cD.whatsapp.replace(/\D/g,'')}?text=🚗*Retirada:* ${jP.join(', ')}`,'_blank'); 
-            } catch(e) { 
-                console.error("Erro Retirada:", e);
-                showToast("Erro ao concluir a retirada.", "error"); 
-            } finally { hideLoading(); } 
+    const m=document.getElementById('retMotivo').value; 
+    const c=document.getElementById('retCliente').value.toUpperCase().trim(); 
+    const f=document.getElementById('retFotoB64').value; 
+    const r=document.querySelector('input[name="retReserva"]:checked').value; 
+    
+    if(lotPlacas.length===0) forcarAddPlacaSelect(); 
+    if(!lotPlacas.length||!c||!f) return showToast("Placa, Destino e Foto obrigatórios!","error"); 
+    showLoading("REGISTRANDO..."); 
+    
+    try { 
+        const {data:cD}=await _supabase.from('pessoas_empresas').select('nome, whatsapp').eq('nome',c).maybeSingle(); 
+        if(!cD) return showToast("Cliente/Destino não encontrado!","error"); 
+        
+        const jP=lotPlacas.map(l=>l.placa); 
+        const {data:cO}=await _supabase.from('chaves').select('placa, reserva, local_guardado').in('placa',jP); 
+        
+        const uf=await uploadFotoToStorage(f, jP[0]); 
+        if(!uf) return; 
+        
+        const hA=new Date().toLocaleString('pt-PT'); 
+        
+        if(m==='Saída Definitiva') {
+            const {error} = await _supabase.from('chaves').delete().in('placa',jP); 
+            if (error) throw error;
+        } else {
+            const {error} = await _supabase.from('chaves').update({status:m, responsavel:c, data_status:hA, reserva:r}).in('placa',jP); 
+            if (error) throw error;
         }
+
+        const lg=jP.map(p=>{ return {data_hora:hA, placa_retirada:p, localizacao:cO.find(x=>x.placa===p)?.local_guardado||'-', evento:m, nome_completo:c, data_devolucao:'-', empresa:currentUser, status_devolucao:'Pendente/Saiu', reserva:r, foto_evidencia:uf, foto_devolucao:null}; }); 
+        await insertInParallel('historico',lg); 
+        
+        closeModal('modalRetirada'); 
+        showToast("Concluído!","success"); 
+        await renderTable(); 
+        
+        // --- INÍCIO DA MENSAGEM WHATSAPP FORMATADA ---
+        if(cD.whatsapp) {
+            const operadorNome = currentUser.split('@')[0].toUpperCase();
+            const textoWhatsApp = `🔑 *COMPROVANTE DE RETIRADA - CLAVICULÁRIO COSQ* 🔑\n\nOlá, *${c}*!\nRegistro de movimentação no quadro de chaves:\n\n*Placa(s):* ${jP.join(', ')}\n*Chaves Entregues:* ${r}\n*Motivo:* ${m}\n*Data/Hora:* ${hA}\n*Operador Responsável:* ${operadorNome}\n\n_Mensagem automática do ClavCOSQ._`;
+            
+            // O encodeURIComponent garante que emojis, espaços e quebras de linha (\n) funcionem perfeitamente no link
+            window.open(`https://wa.me/${cD.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent(textoWhatsApp)}`, '_blank');
+        }
+        // --- FIM DA MENSAGEM WHATSAPP FORMATADA ---
+
+    } catch(e) { 
+        console.error("Erro Retirada:", e);
+        showToast("Erro ao concluir a retirada.", "error"); 
+    } finally { hideLoading(); } 
+}
 
         // --- LÓGICA DA DEVOLUÇÃO COM DATALIST ---
         function abrirModalDevolucao(pP=null) { 
@@ -973,14 +1143,37 @@
             } catch (e) { showToast("Erro: " + (e.message || "Erro de banco de dados"), "error"); console.error(e); } finally { hideLoading(); }
         }
 
-        function getLocaisLivres(oc) { const col = ['A','B','C','D','E','F']; for(let p=1; p<=16; p++) { for(let n=1; n<=21; n++) { for(let l of col) { let loc = `R${p}_${l}${n}_COSQ`; if(!oc.has(loc)) return loc; } } } return null; }
+        function getLocaisLivres(oc) { 
+    const col = ['A','B','C','D','E','F']; 
+    
+    // Cria uma lista apenas com as "gavetas físicas", ignorando o final
+    const gavetasOcupadas = new Set();
+    oc.forEach(loc => {
+        if(loc) {
+            const partes = loc.split('_');
+            if(partes.length >= 2) gavetasOcupadas.add(`${partes[0]}_${partes[1]}`);
+        }
+    });
+
+    for(let p=1; p<=16; p++) { 
+        for(let n=1; n<=21; n++) { 
+            for(let l of col) { 
+                let prefixo = `R${p}_${l}${n}`; 
+                // Verifica se a gaveta física está livre
+                if(!gavetasOcupadas.has(prefixo)) {
+                    return `${prefixo}_LMSPP2`;
+                }
+            } 
+        } 
+    } 
+    return null; 
+}
 
         async function alocarGaveta(pl) {
             showLoading("ALOCANDO GAVETA...");
             try {
-                const {data:od, error: errOd} = await _supabase.from('chaves').select('local_guardado');
-                if (errOd) throw errOd;
-
+                // Atualizado para procurar por 'placa' corretamente
+                const od = await fetchAllData('chaves', 'placa');
                 const oc = new Set((od || []).map(c=>c.local_guardado));
                 let lc = getLocaisLivres(oc);
                 if(!lc) return showToast("O Pátio está lotado!", "error");
@@ -990,6 +1183,7 @@
                 const {error: errUp} = await _supabase.from('chaves').update({
                     local_guardado: lc, status: 'Disponível', responsavel: '-', data_status: ha
                 }).eq('placa', pl);
+                
                 if(errUp) throw errUp;
 
                 await _supabase.from('historico').insert({
@@ -1058,37 +1252,375 @@
         // ------------------------------------------------
         // 11. FILTRO ESTILO EXCEL (HISTÓRICO E EXPORTAÇÃO DINÂMICA)
         // ------------------------------------------------
-        function limparFiltrosHistorico() { document.getElementById('histDataInicio').value=""; document.getElementById('histDataFim').value=""; filtrosAtivos={}; carregarHistorico(); }
-        async function carregarHistorico() { showLoading("CARREGANDO DADOS..."); try { dadosHistoricoBrutos=await fetchAllData('historico','id',false)||[]; aplicarTodosOsFiltrosEAtualizarTabela(); } finally { hideLoading(); } }
-        function abrirMenuExcel(th, colDb) { colunaAtualExcel=colDb; const m=document.getElementById('menuFiltroExcel'); const cl=document.getElementById('excelChecklist'); const rect=th.getBoundingClientRect(); m.style.top=(rect.bottom+window.scrollY)+'px'; m.style.left=rect.left+'px'; m.style.display='flex'; let vU=[...new Set(dadosHistoricoBrutos.map(i=>String(i[colDb]||'-')))]; vU.sort(); cl.innerHTML=`<label class="excel-check-item"><input type="checkbox" id="checkSelectAll" checked onclick="toggleAllExcel(this)"> <b>(Selecionar Tudo)</b></label>`; vU.forEach(v => { let iC=!filtrosAtivos[colDb]||filtrosAtivos[colDb].includes(v)?'checked':''; cl.innerHTML+=`<label class="excel-check-item"><input type="checkbox" class="excel-val-check" value="${v}" ${iC}> ${v}</label>`; }); }
-        function fecharMenuExcel() { document.getElementById('menuFiltroExcel').style.display='none'; }
-        function toggleAllExcel(src) { document.querySelectorAll('.excel-val-check').forEach(cb=>cb.checked=src.checked); }
-        function filtrarListaExcel(t) { let tL=t.toLowerCase(); document.querySelectorAll('#excelChecklist .excel-check-item').forEach((lb,i)=>{ if(i===0)return; lb.style.display=lb.innerText.toLowerCase().includes(tL)?'flex':'none'; }); }
-        function aplicarFiltroExcel() { let sel=[]; document.querySelectorAll('.excel-val-check:checked').forEach(cb=>sel.push(cb.value)); let tC=document.querySelectorAll('.excel-val-check').length; if(sel.length===tC) delete filtrosAtivos[colunaAtualExcel]; else filtrosAtivos[colunaAtualExcel]=sel; fecharMenuExcel(); aplicarTodosOsFiltrosEAtualizarTabela(); }
-        function ordenarHistoricoExcel(ord) { fecharMenuExcel(); dadosHistoricoBrutos = sortDataArray(dadosHistoricoBrutos, colunaAtualExcel, ord==='ASC'); aplicarTodosOsFiltrosEAtualizarTabela(); }
-        
-        function aplicarTodosOsFiltrosEAtualizarTabela() { let dF=[...dadosHistoricoBrutos]; const di=document.getElementById('histDataInicio').value; const df=document.getElementById('histDataFim').value; let ti=di?new Date(di+'T00:00:00').getTime():0; let tf=df?new Date(df+'T23:59:59').getTime():Number.MAX_SAFE_INTEGER; if(di||df) dF=dF.filter(x=>{const l=parseDateBR(x.data_hora).getTime(); return l>=ti&&l<=tf;}); Object.keys(filtrosAtivos).forEach(col=>{ let vP=filtrosAtivos[col]; dF=dF.filter(i=>{ let vL=String(i[col]||'-'); return vP.includes(vL); }); }); dadosHistoricoFiltrados=dF; document.getElementById('histCounter').innerText=dF.length; document.getElementById('tbHistorico').innerHTML=""; currentPageHist=1; renderHistoricoChunk(); }
-        function renderHistoricoChunk() { const tb=document.getElementById('tbHistorico'); const st=(currentPageHist-1)*ITEMS_PER_PAGE; const ed=currentPageHist*ITEMS_PER_PAGE; const ck=dadosHistoricoFiltrados.slice(st,ed); let htmlStr = ''; ck.forEach(x => { try { let bs=String(x.status_devolucao||''); if(bs.includes('Conclu')||bs.includes('Devol')) bs=`<span class="badge success">${bs}</span>`; else if(bs.includes('Pend')) bs=`<span class="badge warning">${bs}</span>`; else bs=`<span class="badge info">${bs}</span>`; let fs=x.foto_evidencia?`<button class="btn-secondary" onclick="window.open('${x.foto_evidencia}')">🖼️ S</button>`:`-`; let fd=x.foto_devolucao?`<button class="btn-secondary" onclick="window.open('${x.foto_devolucao}')">🖼️ D</button>`:`-`; htmlStr+=`<tr><td>${x.data_hora}</td><td><b>${x.placa_retirada}</b></td><td>${x.localizacao}</td><td><b>${x.evento}</b></td><td>${x.nome_completo}</td><td>${x.empresa}</td><td>${x.data_devolucao}</td><td>${bs}</td><td>${x.reserva}</td><td>${fs} ${fd}</td></tr>`; } catch(e) {} }); tb.innerHTML += htmlStr; }
+        // ------------------------------------------------
+        // 11. HISTÓRICO — PAGINAÇÃO SERVER-SIDE (50 por página)
+        // Nunca carrega mais do que 50 registros na memória.
+        // Ao trocar página, a anterior é descartada.
+        // ------------------------------------------------
+
+        function limparFiltrosHistorico() {
+            const hoje = new Date();
+            const hojeFormatado = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
+
+            document.getElementById('histDataInicio').value = "";
+            document.getElementById('histDataFim').value = hojeFormatado;
+            
+            const histBuscaEl = document.getElementById('histBusca');
+            if (histBuscaEl) histBuscaEl.value = "";
+            
+            histFiltrosServidor = { dataInicio: '', dataFim: '', busca: '' };
+            filtrosAtivos = {};
+            if (typeof histSortCol !== 'undefined') { histSortCol = 'id'; histSortAsc = false; }
+            
+            histPageAtual = 1;
+            histCarregando = false; 
+            
+            // Zera a memória global para forçar o sistema a descarregar
+            // todo o histórico do Supabase novamente (Sincronização profunda)
+            arrayHistoricoGlobal = null; 
+            
+            carregarHistorico(1);
+        }
+
+        // Converte "yyyy-mm-dd" (input HTML) para um array de IDs válidos via range de datas
+        // Como data_hora é texto no formato "dd/mm/yyyy hh:mm:ss", a comparação gte/lte
+        // lexicográfica NÃO funciona para ranges entre datas diferentes.
+        // Solução: para cada dia do range, geramos um ilike "dd/mm/yyyy%" e combinamos com OR.
+        function _diasNoRange(di, df) {
+            const dias = [];
+            const inicio = new Date(di + 'T00:00:00');
+            const fim    = new Date(df + 'T00:00:00');
+            if (isNaN(inicio) || isNaN(fim)) return dias;
+            for (let d = new Date(inicio); d <= fim; d.setDate(d.getDate() + 1)) {
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const yyyy = d.getFullYear();
+                dias.push(`${dd}/${mm}/${yyyy}`);
+            }
+            return dias;
+        }
+
+        function _buildHistQuery() {
+            let q = _supabase.from('historico').select('*', { count: 'exact' });
+
+            const di = document.getElementById('histDataInicio')?.value;
+            const df = document.getElementById('histDataFim')?.value;
+            const busca = document.getElementById('histBusca')?.value?.toUpperCase()?.trim();
+
+            // ── NOVO FILTRO DE DATA INTELIGENTE ──
+            // Se APENAS a data final estiver preenchida (que é o padrão de hoje), 
+            // nós NÃO aplicamos o filtro. O sistema puxa todo o histórico de trás para a frente.
+            // Só vai filtrar por dias específicos se você preencher a "Data Início".
+            if (di) {
+                const dataInicio = di;
+                const dataFim = df || di; // Se preencher só o início, busca apenas esse dia exato
+                const dias = _diasNoRange(dataInicio, dataFim);
+
+                if (dias.length > 0 && dias.length <= 93) {
+                    const condicoes = dias.map(d => `data_hora.ilike.${d}%`).join(',');
+                    q = q.or(condicoes);
+                } else if (dias.length > 93) {
+                    // Proteção para não travar em buscas com mais de 3 meses de intervalo
+                    const [d1, m1, y1] = dias[0].split('/');
+                    const [d2, m2, y2] = dias[dias.length - 1].split('/');
+                    q = q.or(`data_hora.ilike.%/${m1}/${y1}%,data_hora.ilike.%/${m2}/${y2}%`);
+                }
+            }
+
+            // ── Filtro de busca por placa/nome/evento ──
+            if (busca) q = q.or(`placa_retirada.ilike.%${busca}%,nome_completo.ilike.%${busca}%,evento.ilike.%${busca}%`);
+
+            // ── Filtros de pesquisa por coluna (texto livre) ──
+            Object.keys(filtrosAtivos).forEach(col => {
+                const termo = filtrosAtivos[col];
+                if (termo) q = q.ilike(col, `%${termo}%`);
+            });
+
+            return q;
+        }
+
+        async function carregarHistorico(pagina = 1) {
+    if (histCarregando) return;
+    histCarregando = true;
+    histPageAtual = pagina;
+
+    const tb = document.getElementById('tbHistorico');
+    const counterEl = document.getElementById('histCounter');
+    
+    // 1. SINCRONIZAÇÃO INICIAL (Otimizada)
+    if (!arrayHistoricoGlobal) {
+        tb.innerHTML = '';
+        _renderHistSkeleton(tb);
+        showLoading("SINCRONIZANDO HISTÓRICO...");
+        try {
+            const todos = await fetchAllData('historico');
+            
+            // O SEGREDO DA VELOCIDADE: Calcula o número da data uma única vez
+            todos.forEach(x => { 
+                x._ts = parseDateBR(x.data_hora).getTime(); 
+            });
+            
+            // Ordenação super-rápida usando o cálculo acima
+            todos.sort((a, b) => b._ts - a._ts);
+            
+            arrayHistoricoGlobal = todos;
+        } catch (e) {
+            console.error("Erro ao sincronizar:", e);
+            showToast("Erro ao baixar dados.", "error");
+            histCarregando = false;
+            hideLoading();
+            return;
+        }
+    }
+
+    // 2. FILTRAGEM NA MEMÓRIA
+    const di = document.getElementById('histDataInicio')?.value;
+    const df = document.getElementById('histDataFim')?.value;
+    const busca = document.getElementById('histBusca')?.value?.toUpperCase()?.trim();
+
+    let dadosFiltrados = [...arrayHistoricoGlobal];
+
+    if (di || df) {
+        const start = di ? new Date(di + 'T00:00:00').getTime() : 0;
+        const end = df ? new Date(df + 'T23:59:59').getTime() : Infinity;
+        // Filtro também acelerado
+        dadosFiltrados = dadosFiltrados.filter(x => x._ts >= start && x._ts <= end);
+    }
+
+    if (busca) {
+        dadosFiltrados = dadosFiltrados.filter(x => 
+            String(x.placa_retirada||'').toUpperCase().includes(busca) ||
+            String(x.nome_completo||'').toUpperCase().includes(busca) ||
+            String(x.evento||'').toUpperCase().includes(busca)
+        );
+    }
+
+    Object.keys(filtrosAtivos).forEach(col => {
+        const vals = filtrosAtivos[col];
+        if (vals && vals.length > 0) {
+            dadosFiltrados = dadosFiltrados.filter(x => vals.includes(String(x[col] || '-')));
+        }
+    });
+
+    // 3. PAGINAÇÃO DE 50 EM 50
+    histTotalRegistros = dadosFiltrados.length;
+    if (counterEl) counterEl.innerText = histTotalRegistros;
+
+    const from = (pagina - 1) * HIST_PAGE_SIZE;
+    const to = from + HIST_PAGE_SIZE;
+    const dadosDaPagina = dadosFiltrados.slice(from, to);
+
+    _renderPaginacaoHistorico();
+
+    tb.innerHTML = '';
+    if (dadosDaPagina.length === 0) {
+        tb.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#888">Nenhum registro encontrado.</td></tr>';
+    } else {
+        _renderHistRows(tb, dadosDaPagina);
+    }
+
+    hideLoading();
+    histCarregando = false;
+}
+
+function _renderPaginacaoHistorico() {
+    const totalPaginas = Math.ceil(histTotalRegistros / HIST_PAGE_SIZE);
+    const nav = document.getElementById('histPaginacao');
+    if (!nav) return;
+
+    if (totalPaginas <= 1 && histTotalRegistros > 0) {
+        nav.innerHTML = `<div style="text-align:center; padding:10px; font-size:12px; color:#888;">Exibindo todos os ${histTotalRegistros} registros</div>`;
+        return;
+    }
+
+    const inicio = (histPageAtual - 1) * HIST_PAGE_SIZE + 1;
+    const fim = Math.min(histPageAtual * HIST_PAGE_SIZE, histTotalRegistros);
+
+    let html = `<div style="display:flex;align-items:center;gap:8px;justify-content:center;padding:10px 0;flex-wrap:wrap;">`;
+    html += `<span style="font-size:12px;color:#888;">${inicio}–${fim} de ${histTotalRegistros}</span>`;
+    
+    // Botão Voltar
+    html += `<button class="btn-secondary" onclick="carregarHistorico(${histPageAtual - 1})" ${histPageAtual === 1 ? 'disabled' : ''}>‹</button>`;
+
+    // Números das Páginas (limitado a 5 botões para não poluir)
+    let startP = Math.max(1, histPageAtual - 2);
+    let endP = Math.min(totalPaginas, startP + 4);
+    if (endP - startP < 4) startP = Math.max(1, endP - 4);
+
+    for (let p = startP; p <= endP; p++) {
+        const style = p === histPageAtual ? 'background:var(--primary);color:white;border-color:var(--primary);' : '';
+        html += `<button class="btn-secondary" style="${style}" onclick="carregarHistorico(${p})">${p}</button>`;
+    }
+
+    // Botão Avançar
+    html += `<button class="btn-secondary" onclick="carregarHistorico(${histPageAtual + 1})" ${histPageAtual === totalPaginas ? 'disabled' : ''}>›</button>`;
+    html += `</div>`;
+    
+    nav.innerHTML = html;
+}
+
+        function _renderHistRows(tb, rows) {
+            let htmlStr = '';
+            rows.forEach(x => {
+                try {
+                    let bs = String(x.status_devolucao || '');
+                    if(bs.includes('Conclu') || bs.includes('Devol')) bs = `<span class="badge success">${bs}</span>`;
+                    else if(bs.includes('Pend')) bs = `<span class="badge warning">${bs}</span>`;
+                    else bs = `<span class="badge info">${bs}</span>`;
+                    let fs = x.foto_evidencia ? `<button class="btn-secondary" onclick="window.open('${x.foto_evidencia}')">🖼️ S</button>` : `-`;
+                    let fd = x.foto_devolucao ? `<button class="btn-secondary" onclick="window.open('${x.foto_devolucao}')">🖼️ D</button>` : `-`;
+                    htmlStr += `<tr><td>${x.data_hora}</td><td><b>${x.placa_retirada}</b></td><td>${x.localizacao}</td><td><b>${x.evento}</b></td><td>${x.nome_completo}</td><td>${x.empresa}</td><td>${x.data_devolucao}</td><td>${bs}</td><td>${x.reserva}</td><td>${fs} ${fd}</td></tr>`;
+                } catch(e) {}
+            });
+            if(!htmlStr) htmlStr = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🔍</div><div style="font-weight:bold;">Nenhum registo encontrado</div></div></td></tr>';
+            tb.innerHTML = htmlStr;
+        }
+
+        function _renderHistSkeleton(tb) {
+            let html = '';
+            for(let i = 0; i < 8; i++) html += `<tr style="opacity:${1-(i*0.1)}"><td colspan="10"><div class="skel" style="width:100%;height:14px;border-radius:4px;"></div></td></tr>`;
+            tb.innerHTML = html;
+        }
+
+        function _renderPaginacaoHistorico() {
+            const totalPaginas = Math.ceil(histTotalRegistros / HIST_PAGE_SIZE);
+            let nav = document.getElementById('histPaginacao');
+            if(!nav) return;
+
+            if(totalPaginas <= 1) { nav.innerHTML = ''; return; }
+
+            const inicio = (histPageAtual - 1) * HIST_PAGE_SIZE + 1;
+            const fim = Math.min(histPageAtual * HIST_PAGE_SIZE, histTotalRegistros);
+
+            let html = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;padding:10px 0;">`;
+            html += `<span style="font-size:12px;color:#888;">${inicio}–${fim} de ${histTotalRegistros}</span>`;
+            html += `<button class="btn-secondary" onclick="carregarHistorico(1)" ${histPageAtual===1?'disabled':''} title="Primeira">«</button>`;
+            html += `<button class="btn-secondary" onclick="carregarHistorico(${histPageAtual-1})" ${histPageAtual===1?'disabled':''} title="Anterior">‹</button>`;
+
+            // Páginas ao redor da atual
+            const delta = 2;
+            for(let p = Math.max(1, histPageAtual - delta); p <= Math.min(totalPaginas, histPageAtual + delta); p++) {
+                const ativo = p === histPageAtual ? 'background:var(--primary);color:white;' : '';
+                html += `<button class="btn-secondary" style="${ativo}" onclick="carregarHistorico(${p})">${p}</button>`;
+            }
+
+            html += `<button class="btn-secondary" onclick="carregarHistorico(${histPageAtual+1})" ${histPageAtual===totalPaginas?'disabled':''} title="Próxima">›</button>`;
+            html += `<button class="btn-secondary" onclick="carregarHistorico(${totalPaginas})" ${histPageAtual===totalPaginas?'disabled':''} title="Última">»</button>`;
+            html += `<span style="font-size:12px;color:#888;">Pg ${histPageAtual}/${totalPaginas}</span>`;
+            html += `</div>`;
+            nav.innerHTML = html;
+        }
+
+        // Filtros tipo Excel — agora apenas para colunas dos dados da página atual
+        function abrirMenuExcel(th, colDb) {
+    colunaAtualExcel = colDb;
+    const m = document.getElementById('menuFiltroExcel');
+    
+    // Esconde a lista de checkboxes para o menu abrir instantaneamente
+    const cl = document.getElementById('excelChecklist');
+    if (cl) cl.style.display = 'none';
+    
+    // Preenche a caixa de pesquisa se já houver um texto filtrado
+    const inputPesquisa = document.getElementById('excelSearchInput');
+    inputPesquisa.value = filtrosAtivos[colDb] || '';
+    inputPesquisa.oninput = null; // Limpa ações antigas
+    
+    // Se o utilizador apertar "Enter" na caixa de pesquisa, aplica o filtro
+    inputPesquisa.onkeypress = function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); aplicarFiltroExcel(); }
+    };
+
+    // Posiciona o menu abaixo do título da coluna
+    const rect = th.getBoundingClientRect();
+    m.style.top = (rect.bottom + window.scrollY) + 'px';
+    m.style.left = rect.left + 'px';
+    m.style.display = 'flex';
+    
+    // Foco automático para o utilizador já começar a digitar
+    setTimeout(() => inputPesquisa.focus(), 100);
+}
+
+function fecharMenuExcel() { 
+    document.getElementById('menuFiltroExcel').style.display = 'none'; 
+}
+
+function aplicarFiltroExcel() {
+    const termo = document.getElementById('excelSearchInput').value.trim();
+    
+    if (termo) {
+        // Se digitou algo, guarda para aplicar na busca do Supabase
+        filtrosAtivos[colunaAtualExcel] = termo;
+    } else {
+        // Se deixou em branco, remove o filtro
+        delete filtrosAtivos[colunaAtualExcel];
+    }
+    
+    fecharMenuExcel();
+    histPageAtual = 1;
+    carregarHistorico(1);
+}
+
+function ordenarHistoricoExcel(ord) {
+    if (colunaAtualExcel === 'data_hora') {
+        // Como o JS tem problemas em ordenar datas "DD/MM/YYYY" de forma alfabética,
+        // usamos a inteligência do ID sequencial para garantir a cronologia perfeita.
+        histSortCol = 'id';
+    } else {
+        // Para todas as outras colunas (Placa, Nome, Evento), usa a ordem natural.
+        histSortCol = colunaAtualExcel;
+    }
+    
+    // 'ASC' é Crescente (A-Z ou mais antigo), 'DESC' é Decrescente (Z-A ou mais novo)
+    histSortAsc = (ord === 'ASC');
+    
+    fecharMenuExcel();
+    histPageAtual = 1;
+    carregarHistorico(1);
+}
+
+        // Mantido para compatibilidade (exportar usa os dados já filtrados via servidor)
+        function aplicarTodosOsFiltrosEAtualizarTabela() { histPageAtual = 1; carregarHistorico(1); }
+        function renderHistoricoChunk() { /* não utilizado — substituído por paginação server-side */ }
         
         // Exportar para um formato de Tabela Dinâmica via HTML-Excel
         async function exportarCSV() { 
             showLoading("GERANDO EXCEL..."); 
-            try { 
+            try {
+                const di = document.getElementById('histDataInicio')?.value;
+                const df = document.getElementById('histDataFim')?.value;
+                const busca = document.getElementById('histBusca')?.value?.toUpperCase()?.trim();
+
+                let exportData = [...arrayHistoricoGlobal]; // Pega os dados rápidos da memória
+
+                if (di || df) {
+                    const start = di ? new Date(di + 'T00:00:00').getTime() : 0;
+                    const end = df ? new Date(df + 'T23:59:59').getTime() : Infinity;
+                    exportData = exportData.filter(x => {
+                        const t = parseDateBR(x.data_hora).getTime();
+                        return t >= start && t <= end;
+                    });
+                }
+                if (busca) {
+                    exportData = exportData.filter(x => String(x.placa_retirada||'').toUpperCase().includes(busca) || String(x.nome_completo||'').toUpperCase().includes(busca) || String(x.evento||'').toUpperCase().includes(busca));
+                }
+                Object.keys(filtrosAtivos).forEach(col => {
+                    const vals = filtrosAtivos[col];
+                    if (vals && vals.length > 0) exportData = exportData.filter(x => vals.includes(String(x[col] || '-')));
+                });
+
                 let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body>';
                 html += '<table border="1" cellpadding="3" cellspacing="0" style="font-family: Calibri, sans-serif; border-collapse: collapse;">';
                 html += '<thead><tr style="background-color: #0056b3; color: #ffffff; font-weight: bold; text-align: left;">';
                 html += '<th>Data</th><th>Placa</th><th>Localização</th><th>Evento</th><th>Solicitante</th><th>Autor Liberação</th><th>Data Devolução</th><th>Status</th><th>Reserva</th>';
                 html += '</tr></thead><tbody>';
-                dadosHistoricoFiltrados.forEach(r => { 
-                    html += `<tr><td>${r.data_hora}</td><td>${r.placa_retirada}</td><td>${r.localizacao}</td><td>${r.evento}</td><td>${r.nome_completo}</td><td>${r.empresa}</td><td>${r.data_devolucao}</td><td>${r.status_devolucao}</td><td>${r.reserva}</td></tr>`; 
-                }); 
+                exportData.forEach(r => { html += `<tr><td>${r.data_hora}</td><td>${r.placa_retirada}</td><td>${r.localizacao}</td><td>${r.evento}</td><td>${r.nome_completo}</td><td>${r.empresa}</td><td>${r.data_devolucao}</td><td>${r.status_devolucao}</td><td>${r.reserva}</td></tr>`; }); 
                 html += '</tbody></table></body></html>'; 
                 
                 const b = new Blob([html], { type: 'application/vnd.ms-excel' }); 
-                const l = document.createElement("a"); 
-                l.href = URL.createObjectURL(b); 
-                l.download = "Relatorio_COSQ.xls"; 
-                l.click(); 
+                const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = "Relatorio_COSQ.xls"; l.click();
+                showToast(`Excel com ${exportData.length} registros gerado!`, "success");
+            } catch(e) {
+                showToast("Erro ao exportar: " + (e.message || e), "error");
             } finally { hideLoading(); } 
         }
 
@@ -1201,6 +1733,123 @@
         
         async function abrirAuditoria() { if(currentNivel!=='admin') return showToast("Apenas Admin.","error"); showLoading("CARREGANDO..."); try { const {data:c, error: errA}=await _supabase.from('chaves').select('*').eq('status','Disponível'); if(errA) throw errA; chavesParaAuditoria=c||[]; if(chavesParaAuditoria.length===0) return showToast("Vazio.","info"); renderAuditoria(); openModal('modalAuditoria'); } catch(e) { showToast("Erro: "+e.message,"error"); } finally { hideLoading(); } } function renderAuditoria() { const tb=document.getElementById('tbAuditoria'); tb.innerHTML=""; let a=sortDataArray(chavesParaAuditoria, sortColAudit, sortAscAudit); a.forEach(c=>{ tb.innerHTML+=`<tr><td><b>${c.placa}</b></td><td>${c.local_guardado}</td><td><button class="btn-save green" onclick="chavesParaAuditoria=chavesParaAuditoria.filter(x=>x.placa!=='${c.placa}');renderAuditoria();">✔️</button></td></tr>`; }); } async function finalizarAuditoria() { if(!confirm(`Extraviar ${chavesParaAuditoria.length} chaves?`)) return; showLoading("AUDITANDO..."); await _supabase.removeAllChannels(); const hA=new Date().toLocaleString('pt-PT'); const pE=chavesParaAuditoria.map(c=>c.placa); try { if(pE.length>0){ for(let i=0;i<pE.length;i+=500) { const {error} = await _supabase.from('chaves').update({status:'🚨 Extraviada', data_status:hA}).in('placa',pE.slice(i,i+500)); if(error) throw error; } const lg=pE.map(p=>({data_hora:hA, placa_retirada:p, localizacao:'-', evento:'Extravio Físico', nome_completo:'AUDITORIA', data_devolucao:'-', empresa:currentUser, status_devolucao:'-', reserva:'-', foto_evidencia:null, foto_devolucao:null})); await insertInParallel('historico',lg); } closeModal('modalAuditoria'); showToast("Finalizada!","success"); await renderTable(); } catch(e) { showToast("Erro: "+e.message,"error"); } finally { iniciarRealtime(); hideLoading(); } }
 
+        // ------------------------------------------------
+        // 13. IMPORTAÇÃO DE DADOS VIA JSON
+        // ------------------------------------------------
+        async function importarJSON(event, tabela) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    showLoading("LENDO ARQUIVO JSON...");
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            if (!Array.isArray(data) || data.length === 0) {
+                throw new Error("O JSON deve ser uma lista válida e não vazia.");
+            }
+
+            // 1. DELETA OS IDs ANTIGOS PARA FORÇAR NOVOS E SEQUENCIAIS
+            data.forEach(item => delete item.id);
+            // --- INÍCIO DA BLINDAGEM DE ENDEREÇOS DUPLICADOS (IMPORTAÇÃO) ---
+            if (tabela === 'chaves') {
+                const od = await fetchAllData('chaves'); // Pega todas as chaves reais do sistema
+                const enderecosOcupados = new Set(od.map(c => String(c.local_guardado).trim()));
+                const enderecosNoJson = new Set();
+
+                for (let item of data) {
+                    const end = String(item.local_guardado).trim();
+                    if (!end || end === '-' || end.includes('Fila_')) continue;
+
+                    // 1. Verifica duplicados DENTRO do próprio JSON
+                    if (enderecosNoJson.has(end)) {
+                        throw new Error(`JSON INVÁLIDO: O endereço '${end}' aparece repetido no seu arquivo.`);
+                    }
+                    enderecosNoJson.add(end);
+
+                    // 2. Verifica se a gaveta já está ocupada no Supabase
+                    if (enderecosOcupados.has(end)) {
+                        throw new Error(`CONFLITO: O endereço '${end}' já está ocupado por outra chave no sistema.`);
+                    }
+                }
+            }
+            // --- FIM DA BLINDAGEM ---
+
+            // 2. ORDENAÇÃO CRONOLÓGICA BLINDADA
+            if (tabela === 'historico') {
+                data.sort((a, b) => {
+                    function parseDataBruta(str) {
+                        if (!str || str === '-') return 0;
+
+                        // Se por acaso vier no formato ISO de banco de dados (ex: 2023-12-01)
+                        if (str.includes('-') && str.indexOf('-') === 4) {
+                            return new Date(str).getTime();
+                        }
+
+                        // Força a leitura estrita no formato Brasileiro (DD/MM/YYYY)
+                        const partes = String(str).split(/[\s]+/);
+                        const d = partes[0].split('/');
+                        
+                        // Se não tiver dia, mês e ano, devolve 0
+                        if (d.length !== 3) return 0;
+
+                        let hr = 0, min = 0, sec = 0;
+                        if (partes[1] && partes[1].includes(':')) {
+                            const tempo = partes[1].split(':');
+                            hr = parseInt(tempo[0]) || 0;
+                            min = parseInt(tempo[1]) || 0;
+                            sec = parseInt(tempo[2]) || 0;
+                        }
+
+                        // Formato Nativo JS: new Date(Ano, Mês (de 0 a 11), Dia, Hora, Minuto, Segundo)
+                        // Isso garante que o Javascript não troque dia com mês!
+                        return new Date(d[2], d[1] - 1, d[0], hr, min, sec).getTime();
+                    }
+
+                    // Ordena do mais ANTIGO para o mais RECENTE.
+                    // Assim, o último inserido ganha o maior ID no Supabase.
+                    return parseDataBruta(a.data_hora) - parseDataBruta(b.data_hora);
+                });
+            }
+
+            showLoading(`IMPORTANDO ${data.length} REGISTROS...`);
+
+            // 3. INSERÇÃO SEQUENCIAL (Lote por Lote)
+            const tamanhoLote = 1000;
+            for (let i = 0; i < data.length; i += tamanhoLote) {
+                const chunk = data.slice(i, i + tamanhoLote);
+                const { error } = await _supabase.from(tabela).insert(chunk);
+                if (error) throw error;
+            }
+
+            showToast(`Importação de ${data.length} registros para '${tabela}' concluída!`, "success");
+            
+            if (tabela === 'chaves') {
+                await renderTable();
+            } else if (tabela === 'historico') {
+                dadosHistoricoFiltrados = [];
+                switchTab('tabHistorico');
+            }
+
+        } catch (err) {
+            console.error(`Erro na importação:`, err);
+            showToast("Erro ao importar: " + (err.message || "Erro desconhecido."), "error");
+        } finally {
+            hideLoading();
+            event.target.value = ""; 
+        }
+    };
+    
+    reader.onerror = function() {
+        hideLoading();
+        showToast("Erro ao ler o arquivo selecionado.", "error");
+    };
+
+    reader.readAsText(file);
+}
+
         // Start Up
         window.addEventListener('DOMContentLoaded', () => {
             verificarSessaoExistente();
@@ -1209,6 +1858,15 @@
             iniciarVerificadorAtrasos(); 
             iniciarRealtime(); 
             carregarSugestoesClientes();
+            
+            // --- INÍCIO: Fixar a data atual no DataFim ---
+            const hoje = new Date();
+            const hojeFormatado = hoje.getFullYear() + '-' + 
+                                  String(hoje.getMonth() + 1).padStart(2, '0') + '-' + 
+                                  String(hoje.getDate()).padStart(2, '0');
+            const dataFimEl = document.getElementById('histDataFim');
+            if(dataFimEl) dataFimEl.value = hojeFormatado;
+            // --- FIM ---
         });
     </script>
 </body>
