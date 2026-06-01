@@ -1,0 +1,141 @@
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(18, 18, 18, 0.95); /* Fundo bem escuro */
+            backdrop-filter: blur(5px); /* Efeito de desfoque no fundo */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Garante que fique por cima de tudo no site */
+        }
+
+        .login-box {
+            width: 90%;
+            max-width: 400px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .input-group input {
+            width: 100%; 
+            box-sizing: border-box;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: #fff;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--gold);
+        }
+
+        /* --- BOTÃO VOLTAR CADASTRO/LOGIN --- */
+        .btn-back {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .btn-back:hover {
+            color: var(--text-light);
+        }
+
+        /* --- MENU SUPERIOR --- */
+        .top-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 40px;
+            background-color: #0a0a0a; /* Fundo ligeiramente mais escuro que o body para dar contraste */
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem; /* Ajuste o tamanho se precisar */
+            font-weight: 700;
+            text-decoration: none;
+            color: #ffffff !important; /* ISSO DEIXA O 'BARBER' BRANCO */
+            letter-spacing: 1px;
+        }
+
+        .nav-logo span {
+            color: var(--gold) !important; /* ISSO DEIXA O 'FAST' DOURADO */
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-nav {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-white {
+            background-color: #fff;
+            color: #000;
+        }
+
+        .btn-white:hover {
+            background-color: #e0e0e0;
+        }
+
+        .btn-gold-nav {
+            background-color: var(--gold);
+            color: #000;
+        }
+
+        .btn-gold-nav:hover {
+            background-color: var(--gold-hover);
+            transform: scale(1.02);
+        }
+
+        /* Responsividade */
+        @media (max-width: 650px) {
+            .top-navbar {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+            
+            .nav-actions {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+        }
